@@ -167,8 +167,8 @@ public class AnimationEngine {
 				// extract transformation matrices for surrounding keyframes
 				AnimKeyframe[] surroundingFrames = new AnimKeyframe[2];
 				theTimeLine.getSurroundingFrames(curFrame, surroundingFrames);
-				Matrix4 prevTransf = surroundingFrames[0].transformation;
-				Matrix4 nextTransf = surroundingFrames[1].transformation;
+				Matrix4 prevTransf = surroundingFrames[0].transformation.clone();
+				Matrix4 nextTransf = surroundingFrames[1].transformation.clone();
 				 
 				// get progression to next keyframe to use in interpolation
 				// (only proceed if have more than one keyframe)
@@ -218,10 +218,7 @@ public class AnimationEngine {
 					
 					
 					// combine interpolated R,S,and T
-					// R and S
-					//Matrix4 S2 = T.clone().mulBefore(S.clone().mulBefore(T.clone().invert()));
 					Matrix4 finalTransform = T.mulBefore(R.mulBefore(S));
-					//Matrix4 finalTransform = R.mulBefore(S.mulBefore(T));
 				
 					// send the event
 					object.transformation.set(finalTransform);
