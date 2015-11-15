@@ -211,14 +211,17 @@ public class AnimationEngine {
 					// quaternion form) are prevRot and  nextRot as Matrix3
 					Matrix4 R = new Matrix4(prevRot);
 					
-					System.out.println("\n\nprev keyframe "+prevTransf);
-					System.out.println("next keyframe "+nextTransf);
-					System.out.println("prevScale "+prevScale);
-					System.out.println("nextScale "+nextScale);
-					System.out.println("S "+S);
 					
-					// combine interpolated R,S,and T\
-					Matrix4 finalTransform = R.mulBefore(S.mulBefore(T));
+					
+					
+					
+					
+					
+					// combine interpolated R,S,and T
+					// R and S
+					//Matrix4 S2 = T.clone().mulBefore(S.clone().mulBefore(T.clone().invert()));
+					Matrix4 finalTransform = T.mulBefore(R.mulBefore(S));
+					//Matrix4 finalTransform = R.mulBefore(S.mulBefore(T));
 				
 					// send the event
 					object.transformation.set(finalTransform);
