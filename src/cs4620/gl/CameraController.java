@@ -95,7 +95,20 @@ public class CameraController {
 	protected void rotate(Matrix4 parentWorld, Matrix4 transformation, Vector3 rotation) {
 		// TODO#A3 SOLUTION START
 		
-				
+		rotation = rotation.clone().mul((float)(Math.PI / 180.0));
+		Matrix4 mRot = Matrix4.createRotationX(rotation.x);
+		mRot.mulAfter(Matrix4.createRotationY(rotation.y));
+		mRot.mulAfter(Matrix4.createRotationZ(rotation.z));
+
+		if (orbitMode) {
+			Vector3 rotCenter = new Vector3(0,0,0);
+			transformation.clone().invert().mulPos(rotCenter);
+			parentWorld.clone().invert().mulPos(rotCenter);
+			mRot.mulBefore(Matrix4.createTranslation(rotCenter.clone().negate()));
+			mRot.mulAfter(Matrix4.createTranslation(rotCenter));
+		}
+		transformation.mulBefore(mRot);
+		
 		// SOLUTION END
 	}
 	
@@ -110,7 +123,10 @@ public class CameraController {
 	protected void translate(Matrix4 parentWorld, Matrix4 transformation, Vector3 motion) {
 		// TODO#A3 SOLUTION START
 
-			
+		Matrix4 mTrans = Matrix4.createTranslation(motion);
+		
+		transformation.mulBefore(mTrans);
+		
 		// SOLUTION END
 	}
 }

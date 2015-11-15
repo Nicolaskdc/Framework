@@ -3,6 +3,7 @@ package cs4620.anim;
 import java.util.HashMap;
 
 import cs4620.common.Scene;
+import cs4620.common.SceneCamera;
 import cs4620.common.SceneObject;
 import cs4620.common.event.SceneTransformationEvent;
 import egl.math.Matrix4;
@@ -151,15 +152,37 @@ public class AnimationEngine {
 		// Loop Through All The Timelines
 		// And Update Transformations Accordingly
 		// (You WILL Need To Use this.scene)
+		 
+		 // Loop through each object and get its timeline
+		 for(SceneObject object : this.scene.objects) {
+			 String objectString = object.getID().name;
+			 AnimTimeline theTimeLine = timelines.get(objectString);
+			 
+			// extract transformation matrices from the timeline for
+			// previous and next keyframe
+			AnimKeyframe[] surroundingFrames = new AnimKeyframe[2];
 
-		// interpolate translations linearly
+			if(!(object instanceof SceneCamera)){
+				theTimeLine.getSurroundingFrames(curFrame, surroundingFrames);
+				Matrix4 prevTrans = surroundingFrames[0].transformation;
+				Matrix4 nextTrans = surroundingFrames[1].transformation;
+			}
+			 
+			// break down matrices into translation-rotation-scale
 
-		// polar decompose axis matrices
+			// interpolate translations linearly
+			 
+			// interpolate scales linearly
 
-		// slerp rotation matrix and linearly interpolate scales
+			// polar decompose axis matrices
 
-		// combine interpolated R,S,and T
+			// slerp rotation matrix
 
-
+			// combine interpolated R,S,and T
+			
+			// send the event
+			scene.sendEvent(new SceneTransformationEvent(object)); // incomplete
+			 
+		}
 	 }
 }

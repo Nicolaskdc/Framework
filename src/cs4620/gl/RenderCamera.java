@@ -55,19 +55,40 @@ public class RenderCamera extends RenderObject {
 		// The camera's transformation matrix is found in this.mWorldTransform (inherited from RenderObject).
 		// The other camera parameters are found in the scene camera (this.sceneCamera).
 		// Look through the methods in Matrix4 before you type in any matrices from the book or the OpenGL specification.
+		// TODO#A3 SOLUTION START 
+		boolean perp = this.sceneCamera.isPerspective;
+		double width = this.sceneCamera.imageSize.x;//viewportSize.x;
+		double height = this.sceneCamera.imageSize.y;//viewportSize.y;
+		double front = this.sceneCamera.zPlanes.x;
+		double back = this.sceneCamera.zPlanes.y; // front and back might be swapped
 		
-		// TODO#A3 SOLUTION START
-
 		// Create viewing matrix
 		
+		this.mView.set(this.mWorldTransform.clone().invert()); // transf from world space to camera space
+		
 		// Correct Image Aspect Ratio By Enlarging Image
+		float aspectRatio = viewportSize.x / viewportSize.y;
+		if (aspectRatio > 1) { //always enlarge to match
+			width = aspectRatio*height;
+			this.sceneCamera.imageSize.set(width, height);	
+		} else {
+			height = width / aspectRatio;
+			this.sceneCamera.imageSize.set(width, height);
+		}
+	
+		// Create Projection 
 		
-
-		// Create Projection
-		
+		// transf from camera space to canonical space
+		if (perp) { //perspective cam
+			Matrix4.createPerspective((float) width,(float) height,(float) front,(float) back, mProj);
+		}else{ // orthographic cam
+			Matrix4.createOrthographic((float) width,(float) height,(float) front,(float) back, mProj);
+		}		
 		
 		// Set the view projection matrix using the view and projection matrices
+		
+		mView.clone().mulAfter(mProj, mViewProjection);
 	
-		// SOLUTION END
+		// SOLUTION END 
 	}	
 }

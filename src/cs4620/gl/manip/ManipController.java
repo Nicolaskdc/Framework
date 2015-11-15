@@ -211,7 +211,142 @@ public class ManipController implements IDisposable {
 		// You may find it helpful to structure your code into a few helper functions; ours is about 150 lines.
 		
 		// TODO#A3 SOLUTION START
+		switch (manip.type) {
+		case Manipulator.Type.SCALE:
+			applyScaling(manip.axis, camera.mViewProjection, object, lastMousePos, curMousePos);
+			break;
+		case Manipulator.Type.ROTATE:
+			applyRotation(manip.axis, camera.mViewProjection, object, lastMousePos, curMousePos);
+			break;
+		case Manipulator.Type.TRANSLATE:
+			applyTranslation(manip.axis, camera.mViewProjection, object, lastMousePos, curMousePos);
+			break;
+		}
+	}
 	
+	public void applyRotation(int axis, Matrix4 mViewProjection, RenderObject object, Vector2 lastMousePos, Vector2 curMousePos) {
+		float amount = -(curMousePos.y - lastMousePos.y);
+		Matrix4 M = new Matrix4();
+		switch (axis) {
+		case Manipulator.Axis.X:
+			M = Matrix4.createRotationX(amount);
+			break;
+		case Manipulator.Axis.Y:
+			M = Matrix4.createRotationY(amount);
+			break;
+		case Manipulator.Axis.Z:
+			M = Matrix4.createRotationZ(amount);
+			break;
+		}
+		if (parentSpace)
+			object.sceneObject.transformation.mulAfter(M);
+		else
+			object.sceneObject.transformation.mulBefore(M);
+	}
+	public void applyTranslation(int axis, Matrix4 mViewProjection, RenderObject object, Vector2 lastMousePos, Vector2 curMousePos) {
+		Vector3 axisDirection = new Vector3();
+		Vector3 axisOrigin = new Vector3();
+		switch (axis) {
+		case Manipulator.Axis.X:
+			axisDirection.set(1,0,0);
+			break;
+		case Manipulator.Axis.Y:
+			axisDirection.set(0,1,0);
+			break;
+		case Manipulator.Axis.Z:
+			axisDirection.set(0,0,1);
+			break;
+		}
+		if (parentSpace) {
+			if (object.parent != null) {
+				object.parent.mWorldTransform.mulPos(axisOrigin);
+				object.parent.mWorldTransform.mulDir(axisDirection);
+			}
+		} else {
+			object.mWorldTransform.mulPos(axisOrigin);
+			object.mWorldTransform.mulDir(axisDirection);
+		}
+		float t1 = getAxisT(axisOrigin, axisDirection, mViewProjection, lastMousePos);
+		float t2 = getAxisT(axisOrigin, axisDirection, mViewProjection, curMousePos);
+		Vector3 translationAmount = new Vector3();
+		switch (axis) {
+		case Manipulator.Axis.X:
+			translationAmount.set(t2-t1, 0, 0);
+			break;
+		case Manipulator.Axis.Y:
+			translationAmount.set(0, t2-t1, 0);
+			break;
+		case Manipulator.Axis.Z:
+			translationAmount.set(0, 0, t2-t1);
+			break;
+		}
+		Matrix4 M = Matrix4.createTranslation(translationAmount);
+		if (parentSpace)
+			object.sceneObject.transformation.mulAfter(M);
+		else
+			object.sceneObject.transformation.mulBefore(M);
+	}
+	public void applyScaling(int axis, Matrix4 mViewProjection, RenderObject object, Vector2 lastMousePos, Vector2 curMousePos) {
+		Vector3 axisDirection = new Vector3();
+		Vector3 axisOrigin = new Vector3();
+		switch (axis) {
+		case Manipulator.Axis.X:
+			axisDirection.set(1,0,0);
+			break;
+		case Manipulator.Axis.Y:
+			axisDirection.set(0,1,0);
+			break;
+		case Manipulator.Axis.Z:
+			axisDirection.set(0,0,1);
+			break;
+		}
+		if (parentSpace) {
+			if (object.parent != null) {
+				object.parent.mWorldTransform.mulPos(axisOrigin);
+				object.parent.mWorldTransform.mulDir(axisDirection);
+			}
+		} else {
+			object.mWorldTransform.mulPos(axisOrigin);
+			object.mWorldTransform.mulDir(axisDirection);
+		}
+		float t1 = getAxisT(axisOrigin, axisDirection, mViewProjection, lastMousePos);
+		float t2 = getAxisT(axisOrigin, axisDirection, mViewProjection, curMousePos);
+		Vector3 scaleAmount = new Vector3();
+		switch (axis) {
+		case Manipulator.Axis.X:
+			scaleAmount.set(t2/t1, 1, 1);
+			break;
+		case Manipulator.Axis.Y:
+			scaleAmount.set(1, t2/t1, 1);
+			break;
+		case Manipulator.Axis.Z:
+			scaleAmount.set(1, 1, t2/t1);
+			break;
+		}
+		Matrix4 M = Matrix4.createScale(scaleAmount);		
+		if (parentSpace)
+			object.sceneObject.transformation.mulAfter(M);
+		else
+			object.sceneObject.transformation.mulBefore(M);
+	}
+	
+	static float getAxisT(Vector3 axisOrigin, Vector3 axisDirection, Matrix4 mVP, Vector2 mousePos) {
+		Vector3 p1 = new Vector3(mousePos.x, mousePos.y, -1);
+		Vector3 p2 = new Vector3(mousePos.x, mousePos.y, 1);
+		Matrix4 mVPI = mVP.clone().invert();
+		mVPI.mulPos(p1);
+		mVPI.mulPos(p2);
+		Vector3 rayOrigin = p1;
+		Vector3 rayDirection = p2.clone().sub(p1);
+		return closestApproach(rayOrigin, rayDirection, axisOrigin, axisDirection);
+	}
+	static float closestApproach(Vector3 rayOrigin, Vector3 rayDirection, Vector3 axisOrigin, Vector3 axisDirection) {
+		// build a basis a, b, c where a is parallel to ray and c is perp to axis
+		Vector3 a = rayDirection;
+		Vector3 c = a.clone().cross(axisDirection).normalize();
+		Vector3 b = c.clone().cross(a);
+		// Now the intersection is the point on the ray with b coordinate == 0
+		return rayOrigin.clone().sub(axisOrigin).dot(b) / axisDirection.dot(b);
 	}
 	// SOLUTION END
 	

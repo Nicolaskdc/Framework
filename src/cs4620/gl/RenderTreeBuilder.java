@@ -11,6 +11,9 @@ import cs4620.common.SceneLight;
 import cs4620.common.SceneObject;
 import cs4620.common.Texture;
 import egl.math.Vector2;
+// The following imports were added by the student, Nicolas Kuhn de Chizelle (nk436), on 09/29/15
+import egl.math.Matrix4;
+import egl.math.Matrix3;
 
 /**
  * Class to hold functions that build the scene hierarchy for OpenGL rendering, starting from the common 
@@ -120,7 +123,70 @@ public class RenderTreeBuilder {
 	 */
 	public static void rippleTransformations(RenderEnvironment env) {
 		// TODO#A3 SOLUTION START
+		
+		// -- Set transformations for each object in [env]
+		rippleTransformationsHelper(env.root);
+		
+		// -- Recalculate each camera's ViewPerspectiveProjection
+		for(RenderCamera cam : env.cameras){
+			// recalculate [cam]'s ViewPerspectiveProjection
+			cam.updateCameraMatrix(env.viewportSize);
 		}
+	}
+	
+	/**
+	 * Helper function for [rippleTransformations].
+	 * Compute the frame-to-world transformations for the root-node RenderObject, and
+	 * for all of its children.
+	 * 
+	 * @param root
+	 */
+	public static void rippleTransformationsHelper(RenderObject root){
+		// Recursive plan: set the transformations of the RenderObject [root]
+		//  (stored in mWorldTransform and mWorldTransformIT) from its parent's
+		//  transformations. Then call this function [rippleTransformations] on
+		//  each of the RenderObject's children. 
+		//  CASE 1. If this is the root node of the [RenderEnvironment], i.e. if [root]
+		//          has no parent, its transformation is its object's transformation. 
+		//   Otherwise:
+		//  CASE 2. Set the transformations of [root] to its object's transformations
+		//          combined with its parent's transformations
+		//  Base case: If this node has no children, do not perform a recursive call.
+		
+		
+		// -- SET OBJECT TRANSFORMATION FOR [root]
+		// CASE 1. [root] is the RenderEnvironment's root
+		if(root.parent == null){
+			// object transformation = [This object's Matrix]
+			root.mWorldTransform.set(root.sceneObject.transformation);
+		}
+		// CASE 2. [root] has a parent
+		else{
+			// object transformation = [Parent Matrix] * [This object's Matrix]
+			Matrix4 parentTransform = root.parent.mWorldTransform.clone();
+			Matrix4 thisTransform = root.sceneObject.transformation.clone();
+			root.mWorldTransform.set(parentTransform.mulBefore(thisTransform));
+		}
+		// -- SET NORMAL TRANSFORMATION FOR [root]
+		// normal transformation is the same for both cases. Uses Matrix3.
+		//   = ( ( [Object's full transformation] <- transposed ) <- inverse of )
+		Matrix3 fullTransformShrinked = new Matrix3(root.mWorldTransform.clone());
+		root.mWorldTransformIT.set(fullTransformShrinked.clone().transpose().invert());
+		
+		
+		// -- BASE CASE: [root] has no children
+		if(root.children.size() == 0){
+			// do nothing
+		}
+		// -- RECURSIVE CALL: [root] has children
+		else{
+			// call this function on each of the root's children
+			for(RenderObject o : root.children){
+				rippleTransformationsHelper(o);
+			}
+		}
+		
+	}
 	// SOLUTION END
 	
 	/**
