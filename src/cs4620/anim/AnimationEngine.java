@@ -153,36 +153,78 @@ public class AnimationEngine {
 		// And Update Transformations Accordingly
 		// (You WILL Need To Use this.scene)
 		 
-		 // Loop through each object and get its timeline
-		 for(SceneObject object : this.scene.objects) {
-			 String objectString = object.getID().name;
-			 AnimTimeline theTimeLine = timelines.get(objectString);
+		// Loop through each object
+		for(SceneObject object : this.scene.objects) {
 			 
-			// extract transformation matrices from the timeline for
-			// previous and next keyframe
-			AnimKeyframe[] surroundingFrames = new AnimKeyframe[2];
+			// get object's timeline
+			String objectString = object.getID().name;
+			AnimTimeline theTimeLine = timelines.get(objectString);
 
-			if(!(object instanceof SceneCamera)){
+			// only proceed if object can be animated
+			// (meaning has a defined timeline in [timelines])
+			if(theTimeLine != null){
+				
+				// extract transformation matrices for surrounding keyframes
+				AnimKeyframe[] surroundingFrames = new AnimKeyframe[2];
 				theTimeLine.getSurroundingFrames(curFrame, surroundingFrames);
-				Matrix4 prevTrans = surroundingFrames[0].transformation;
-				Matrix4 nextTrans = surroundingFrames[1].transformation;
+				Matrix4 prevTransf = surroundingFrames[0].transformation;
+				Matrix4 nextTransf = surroundingFrames[1].transformation;
+				 
+				// get progression to next keyframe to use in interpolation
+				// (only proceed if have more than one keyframe)
+				int prevFrame = surroundingFrames[0].frame;
+				int nextFrame = surroundingFrames[1].frame;
+				if(prevFrame != nextFrame){
+					float progress = ((float) curFrame-prevFrame)/(nextFrame-prevFrame);
+					
+					// Extract translations and linearly interpolate them
+					Vector3 prevTransl =  new Vector3(prevTransf.get(0,3), 
+													  prevTransf.get(1,3), 
+													  prevTransf.get(2,3));
+					Vector3 nextTransl =  new Vector3(nextTransf.get(0,3), 
+													  nextTransf.get(1,3), 
+													  nextTransf.get(2,3));
+					Vector3 newTranslation = prevTransl.clone();
+					newTranslation.lerp(nextTransl, progress);
+					Matrix4 T = Matrix4.createTranslation(newTranslation);
+					
+					// Extract scaling and rotations
+					Matrix3 prevRS = new Matrix3(prevTransf);
+					Matrix3 nextRS = new Matrix3(nextTransf);
+					
+					Matrix3 prevRot = new Matrix3();
+					Matrix3 prevScale = new Matrix3();
+					prevRS.polar_decomp(prevRot,  prevScale);
+					Matrix3 nextRot = new Matrix3();
+					Matrix3 nextScale = new Matrix3();
+					nextRS.polar_decomp(nextRot,  nextScale);
+					
+					// interpolate scales linearly
+					Matrix3 newScale = new Matrix3();
+					newScale.interpolate(prevScale, nextScale, progress);
+					Matrix4 S = new Matrix4(newScale);
+
+					// slerp rotation matrix
+					// THIS IS THE STUFF YOU DO JEREMY
+					// REPLACE THIS NEXT LINE WITH YOUR ANSWER
+					// The previous and next matrices for rotation (not in
+					// quaternion form) are prevRot and  nextRot as Matrix3
+					Matrix4 R = new Matrix4(prevRot);
+					
+					System.out.println("\n\nprev keyframe "+prevTransf);
+					System.out.println("next keyframe "+nextTransf);
+					System.out.println("prevScale "+prevScale);
+					System.out.println("nextScale "+nextScale);
+					System.out.println("S "+S);
+					
+					// combine interpolated R,S,and T\
+					Matrix4 finalTransform = R.mulBefore(S.mulBefore(T));
+				
+					// send the event
+					object.transformation.set(finalTransform);
+					scene.sendEvent(new SceneTransformationEvent(object)); // incomplete
+				}
 			}
-			 
-			// break down matrices into translation-rotation-scale
-
-			// interpolate translations linearly
-			 
-			// interpolate scales linearly
-
-			// polar decompose axis matrices
-
-			// slerp rotation matrix
-
-			// combine interpolated R,S,and T
-			
-			// send the event
-			scene.sendEvent(new SceneTransformationEvent(object)); // incomplete
-			 
 		}
 	 }
 }
