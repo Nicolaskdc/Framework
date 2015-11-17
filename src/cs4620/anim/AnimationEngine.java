@@ -209,7 +209,13 @@ public class AnimationEngine {
 					// REPLACE THIS NEXT LINE WITH YOUR ANSWER
 					// The previous and next matrices for rotation (not in
 					// quaternion form) are prevRot and  nextRot as Matrix3
-					Matrix4 R = new Matrix4(prevRot);
+					
+					Quat prevQ = new Quat(prevRot);
+					Quat nextQ = new Quat(nextRot);
+					Quat newQ = Quat.slerp(prevQ, nextQ, progress);
+					Matrix4 newR = null;
+					newQ.toRotationMatrix(newR);
+					Matrix4 R = new Matrix4(newR);
 					
 					
 					
