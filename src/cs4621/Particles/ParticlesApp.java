@@ -8,7 +8,7 @@ import blister.ScreenList;
 public class ParticlesApp extends MainGame {
     public ParticlesApp(String title, int w, int h) {
         super(title, w, h, 
-                System.getProperty("os.name").equalsIgnoreCase("Mac OS X") ? new ContextAttribs(3,2).withProfileCore(true) : null,
+	        null,
                 null
                 );
     }

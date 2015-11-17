@@ -213,7 +213,7 @@ public class AnimationEngine {
 					Quat prevQ = new Quat(prevRot);
 					Quat nextQ = new Quat(nextRot);
 					Quat newQ = Quat.slerp(prevQ, nextQ, progress);
-					Matrix4 newR = null;
+					Matrix4 newR = new Matrix4();
 					newQ.toRotationMatrix(newR);
 					Matrix4 R = new Matrix4(newR);
 					
