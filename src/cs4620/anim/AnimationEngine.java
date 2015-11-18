@@ -174,62 +174,52 @@ public class AnimationEngine {
 				// (only proceed if have more than one keyframe)
 				int prevFrame = surroundingFrames[0].frame;
 				int nextFrame = surroundingFrames[1].frame;
+				float progress = 1; // progression if not between keyframes
 				if(prevFrame != nextFrame){
-					float progress = ((float) curFrame-prevFrame)/(nextFrame-prevFrame);
-					
-					// Extract translations and linearly interpolate them
-					Vector3 prevTransl =  new Vector3(prevTransf.get(0,3), 
-													  prevTransf.get(1,3), 
-													  prevTransf.get(2,3));
-					Vector3 nextTransl =  new Vector3(nextTransf.get(0,3), 
-													  nextTransf.get(1,3), 
-													  nextTransf.get(2,3));
-					Vector3 newTranslation = prevTransl.clone();
-					newTranslation.lerp(nextTransl, progress);
-					Matrix4 T = Matrix4.createTranslation(newTranslation);
-					
-					// Extract scaling and rotations
-					Matrix3 prevRS = new Matrix3(prevTransf);
-					Matrix3 nextRS = new Matrix3(nextTransf);
-					
-					Matrix3 prevRot = new Matrix3();
-					Matrix3 prevScale = new Matrix3();
-					prevRS.polar_decomp(prevRot,  prevScale);
-					Matrix3 nextRot = new Matrix3();
-					Matrix3 nextScale = new Matrix3();
-					nextRS.polar_decomp(nextRot,  nextScale);
-					
-					// interpolate scales linearly
-					Matrix3 newScale = new Matrix3();
-					newScale.interpolate(prevScale, nextScale, progress);
-					Matrix4 S = new Matrix4(newScale);
-
-					// slerp rotation matrix
-					// THIS IS THE STUFF YOU DO JEREMY
-					// REPLACE THIS NEXT LINE WITH YOUR ANSWER
-					// The previous and next matrices for rotation (not in
-					// quaternion form) are prevRot and  nextRot as Matrix3
-					
-					Quat prevQ = new Quat(prevRot);
-					Quat nextQ = new Quat(nextRot);
-					Quat newQ = Quat.slerp(prevQ, nextQ, progress);
-					Matrix4 newR = new Matrix4();
-					newQ.toRotationMatrix(newR);
-					Matrix4 R = new Matrix4(newR);
-					
-					
-					
-					
-					
-					
-					
-					// combine interpolated R,S,and T
-					Matrix4 finalTransform = T.mulBefore(R.mulBefore(S));
-				
-					// send the event
-					object.transformation.set(finalTransform);
-					scene.sendEvent(new SceneTransformationEvent(object)); // incomplete
+					progress = ((float) curFrame-prevFrame)/(nextFrame-prevFrame);
 				}
+					
+				// Extract translations and linearly interpolate them
+				Vector3 prevTransl =  new Vector3(prevTransf.get(0,3), 
+												  prevTransf.get(1,3), 
+												  prevTransf.get(2,3));
+				Vector3 nextTransl =  new Vector3(nextTransf.get(0,3), 
+												  nextTransf.get(1,3), 
+												  nextTransf.get(2,3));
+				Vector3 newTranslation = prevTransl.clone();
+				newTranslation.lerp(nextTransl, progress);
+				Matrix4 T = Matrix4.createTranslation(newTranslation);
+					
+				// Extract scaling and rotations
+				Matrix3 prevRS = new Matrix3(prevTransf);
+				Matrix3 nextRS = new Matrix3(nextTransf);
+					
+				Matrix3 prevRot = new Matrix3();
+				Matrix3 prevScale = new Matrix3();
+				prevRS.polar_decomp(prevRot,  prevScale);
+				Matrix3 nextRot = new Matrix3();
+				Matrix3 nextScale = new Matrix3();
+				nextRS.polar_decomp(nextRot,  nextScale);
+					
+				// interpolate scales linearly
+				Matrix3 newScale = new Matrix3();
+				newScale.interpolate(prevScale, nextScale, progress);
+				Matrix4 S = new Matrix4(newScale);
+
+				// slerp rotation matrix
+				Quat prevQ = new Quat(prevRot);
+				Quat nextQ = new Quat(nextRot);
+				Quat newQ = Quat.slerp(prevQ, nextQ, progress);
+				Matrix4 newR = new Matrix4();
+				newQ.toRotationMatrix(newR);
+				Matrix4 R = new Matrix4(newR);
+					
+				// combine interpolated R,S,and T
+				Matrix4 finalTransform = T.mulBefore(R.mulBefore(S));
+				
+				// send the event
+				object.transformation.set(finalTransform);
+				scene.sendEvent(new SceneTransformationEvent(object));
 			}
 		}
 	 }
