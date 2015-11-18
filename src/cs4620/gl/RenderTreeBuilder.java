@@ -133,6 +133,7 @@ public class RenderTreeBuilder {
 			cam.updateCameraMatrix(env.viewportSize);
 		}
 	}
+	// SOLUTION END
 	
 	/**
 	 * Helper function for [rippleTransformations].
@@ -187,7 +188,6 @@ public class RenderTreeBuilder {
 		}
 		
 	}
-	// SOLUTION END
 	
 	/**
 	 * Make a RenderMaterial for each Material in <scene>.
